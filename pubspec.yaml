@@ -1,0 +1,6 @@
+name: material_cupertino_migration_audit
+description: Heuristic audit prototype for Flutter Material and Cupertino decoupling migration.
+version: 0.1.0
+environment:
+  sdk: ^3.9.0
+
