@@ -1,9 +1,12 @@
-I started looking at migration tooling for this and built a small dependency-free
-audit prototype to map the edge cases before attempting a real `dart fix`.
+I started looking at migration tooling for this and put together a small
+dependency-free audit prototype to make the edge cases concrete before
+attempting a real `dart fix` implementation:
+
+https://github.com/MarlonJD/flutter-material-cupertino-migration-audit
 
 Early findings:
 
-- Simple unprefixed imports can likely be URI-rewritten from
+- Simple unprefixed imports seem mechanically URI-rewritable from
   `package:flutter/material.dart` to `package:material_ui/material_ui.dart` and
   from `package:flutter/cupertino.dart` to
   `package:cupertino_ui/cupertino_ui.dart`.
@@ -36,3 +39,6 @@ I am not proposing this as the final implementation. It is just a conservative
 audit pass to make the migration cases concrete before deciding how much belongs
 in `dart fix` versus a separate migration tool.
 
+If this direction is useful, I can turn the audit into a targeted Flutter
+tool/framework PR after maintainer guidance on where it should live and what
+level of automation is appropriate.
