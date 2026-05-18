@@ -293,12 +293,12 @@ FileAnalysis analyzeFile(File file) {
   for (final directive in designDirectives) {
     if (directive.kind == 'export') {
       analysis.notes.add(
-        'Re-export of ${directive.uri} is a downstream API surface. Automated migration should not silently change it.',
+        'Export of ${directive.uri} should be validated to ensure the fix preserves the exported API surface.',
       );
     }
     if (directive.hideNames.isNotEmpty) {
       analysis.notes.add(
-        'Uses hide combinator on ${directive.uri}: ${directive.hideNames.join(', ')}. This likely needs manual review.',
+        'Uses hide combinator on ${directive.uri}: ${directive.hideNames.join(', ')}. Validate whether dart fix preserves the intended imported names.',
       );
     }
     if (directive.showNames.isNotEmpty) {
@@ -308,14 +308,9 @@ FileAnalysis analyzeFile(File file) {
       }
       if (frameworkNames.isNotEmpty) {
         analysis.notes.add(
-          'show combinator mixes design and framework symbols: ${frameworkNames.toSet().join(', ')}.',
+          'show combinator mixes design and framework symbols: ${frameworkNames.toSet().join(', ')}. Validate whether dart fix splits or augments imports correctly.',
         );
       }
-    }
-    if (directive.prefix != null) {
-      analysis.notes.add(
-        'Prefixed import "${directive.prefix}" can be URI-rewritten, but unprefixed framework usage must come from another import.',
-      );
     }
   }
 
@@ -486,7 +481,7 @@ void _printReport(List<FileAnalysis> analyses, int scannedFiles) {
   final dependencies = <String>{};
   var materialFiles = 0;
   var cupertinoFiles = 0;
-  var manualReviewFiles = 0;
+  var validationNoteFiles = 0;
   var frameworkImportFiles = 0;
 
   for (final analysis in analyses) {
@@ -499,7 +494,7 @@ void _printReport(List<FileAnalysis> analyses, int scannedFiles) {
       }
     }
     if (analysis.notes.isNotEmpty) {
-      manualReviewFiles++;
+      validationNoteFiles++;
     }
     if (analysis.frameworkImportsNeeded.isNotEmpty ||
         analysis.partFrameworkUsage.isNotEmpty) {
@@ -507,16 +502,16 @@ void _printReport(List<FileAnalysis> analyses, int scannedFiles) {
     }
   }
 
-  print('Material/Cupertino import audit');
+  print('Material/Cupertino import fix audit');
   print('Scanned Dart files: $scannedFiles');
   print('Files with Material imports/exports: $materialFiles');
   print('Files with Cupertino imports/exports: $cupertinoFiles');
   print(
     'Files likely needing explicit framework imports: $frameworkImportFiles',
   );
-  print('Files needing manual review: $manualReviewFiles');
+  print('Files with validation notes: $validationNoteFiles');
   if (dependencies.isNotEmpty) {
-    print('Potential pubspec dependencies: ${dependencies.join(', ')}');
+    print('Standalone dependencies to ensure: ${dependencies.join(', ')}');
   }
   print('');
 
@@ -535,7 +530,7 @@ void _printReport(List<FileAnalysis> analyses, int scannedFiles) {
           : ' hide ${directive.hideNames.join(', ')}';
       print('  ${directive.kind}: ${directive.uri}$prefix$show$hide');
       print(
-        '    candidate: ${directive.kind} "${library.packageUri}"$prefix$show$hide;',
+        '    rewrite target: ${directive.kind} "${library.packageUri}"$prefix$show$hide;',
       );
     }
 
@@ -558,7 +553,7 @@ void _printReport(List<FileAnalysis> analyses, int scannedFiles) {
     }
 
     if (analysis.partFrameworkUsage.isNotEmpty) {
-      print('  part files using framework symbols through this library:');
+      print('  part files with framework symbols resolved by this library:');
       for (final entry in analysis.partFrameworkUsage.entries) {
         final symbols =
             entry.value.values.expand((symbols) => symbols).toSet().toList()
@@ -570,7 +565,7 @@ void _printReport(List<FileAnalysis> analyses, int scannedFiles) {
     }
 
     for (final note in analysis.notes) {
-      print('  manual-review: $note');
+      print('  validation-note: $note');
     }
     print('');
   }
@@ -582,7 +577,7 @@ void _printUsage() {
   );
   print('');
   print(
-    'Audits Dart files for Flutter Material/Cupertino decoupling migration risks.',
+    'Audits Dart files for Flutter Material/Cupertino migration fix validation cases.',
   );
 }
 

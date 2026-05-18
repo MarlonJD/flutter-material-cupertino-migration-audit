@@ -1,4 +1,4 @@
 analyzer:
   exclude:
     - fixtures/**
-
+    - premerge_dart_fix_validation/**
